@@ -1,0 +1,549 @@
+import time
+import pygame
+import random
+import pygame_widgets
+from pygame_widgets.slider import Slider
+from pygame_widgets.textbox import TextBox
+
+# Map labirin
+maze_map = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
+    [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    #0=jalan
+    #1=tembok
+]
+# Inisialisasi pygame
+pygame.init()
+
+x_window = 900
+y_window = 600
+screen = pygame.display.set_mode([x_window,y_window])
+ # Mengatur ukuran jendela
+pygame.display.set_caption("2101020041 Seri Wilani")
+
+# Mengatur warna latar belakang
+screen.fill([135, 206, 250])
+
+timer = pygame.time.Clock()
+start = 300 # setting waktu permainan -> 300 sama dengan 30 detik
+
+# slider untuk setting pandangan droid hijau
+button_pos = (650, 350)  # 
+slider = Slider(screen, button_pos[0], button_pos[1] + 40, 100, 20, min=2, max=5, step=1)
+output = TextBox(screen, button_pos[0] + 500, button_pos[1] + 40, 20, 20, fontSize=20, borderThickness=2)
+
+output.disable()
+button_pos = (650, 20)  # Ubah posisi tombol "Acak Peta" di sini
+
+button_width = 200
+button_height = 30
+cell_size = 40
+num_rows = len(maze_map)
+num_cols = len(maze_map[0])
+score = 0
+hi_score = 0
+green_droids= [] # untuk menampung koordinat droid green
+red_droids= [] # untuk menampung koordinat droid green
+
+# display droid green   
+def draw_droid(window,color, x,y ):
+    # print(x,y)
+    x = x* cell_size + cell_size //2
+    y = y* cell_size + cell_size //2
+
+    pygame.draw.circle(window,color,(y,x),20)
+ 
+# Tampilan droid hijau
+def add_droid_green():
+    ulang = True
+    while ulang:
+        x_green = random.randint(0,9) 
+        y_green = random.randint(0,9) 
+        gren = 0    
+        for i in range(num_rows):
+            for j in range(num_cols):
+                if maze_map[x_green][y_green] == 0:
+                    gren= (x_green,y_green)          
+                    ulang= False
+                
+    green_droids.append(gren)
+
+# Tampilan droid merah
+def add_droid_red():
+    ulang = True
+    while ulang:
+        x_red = random.randint(0,9) 
+        y_red = random.randint(0,9) 
+        red = 0
+        for i in range(num_rows):
+            for j in range(num_cols):
+                if maze_map[x_red][y_red] == 0:
+                    gren= (x_red,y_red)
+                    red= (x_red,y_red)
+                    ulang = False
+
+    red_droids.append(red)
+
+# Fungsi untuk menggambar labirin dengan droid menggunakan pygame
+def draw_maze(maze, red_droid_pos,green_droid_pos, button_pos, cell_size):
+    global axis
+    global ye
+
+    screen.fill([135, 206, 250])
+    # Mendapatkan jumlah sel labirin
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+    
+    # Loop melalui seluruh labirin
+    for row in range(num_rows):
+        for col in range(num_cols):
+            
+                if maze[green_droid_pos[0]][green_droid_pos[1]] == 0 and maze [red_droid_pos[0]][red_droid_pos[1]] == 0:
+                    cell = maze[row][col]
+                    
+                    # Mengatur warna sel berdasarkan nilai pada labirin
+                    color = (255, 255, 255) if cell == 0 else (0, 0, 0)
+
+                    # Menggambar sel
+                    pygame.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size, cell_size))
+                else:
+                    draw_maze(maze, red_droid_pos,green_droid_pos, button_pos, cell_size)
+                    slider.draw()
+                    output.draw()
+                    
+                    
+    # Menggambar tombol "Acak Peta"
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1], button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Acak Peta", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height // 2))
+    screen.blit(text, text_rect)
+    
+    # Menggambar tombol "Acak Droid Merah"
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1]+40, button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Acak Droid Merah", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height + 30))
+    screen.blit(text, text_rect)
+
+    # menggambar tombol "acak droid hijau"
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1]+80, button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Acak Droid Hijau", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height + 70))
+    screen.blit(text, text_rect)
+
+    # menggambar tombol "tambah droid hijau
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1]+120, button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Tambah Droid Merah", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height + 110))
+    screen.blit(text, text_rect)
+
+    #menggambar tombol "Mulai"
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1]+160, button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Mulai", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height + 150))
+    screen.blit(text, text_rect)
+
+    # menggambar tombol "berhenti"
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1]+200, button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Berhenti", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height + 190))
+    screen.blit(text, text_rect)
+
+    # menggambar tombol "keluar"
+    pygame.draw.rect(screen, (150, 100, 100), (button_pos[0], button_pos[1]+240, button_width, button_height))
+    font = pygame.font.Font(None, 24)
+    text = font.render("Keluar", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(button_pos[0] + button_width // 2, button_pos[1] + button_height + 230))
+    screen.blit(text, text_rect)
+
+    # Menggambar slider dan kotak teks untuk pandangan droid hijau
+    font_1 = pygame.font.Font(None, 20)
+    text_1 = font_1.render("Pandangan Droid Hijau", True, (0, 0, 0))
+    screen.blit(text_1, [button_pos[0], button_pos[1]+350])
+    slider.draw()
+    output.draw()
+
+# Fungsi untuk mengacak peta dengan mempertahankan satu jalur terhubung
+def randomize_maze(maze):
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+
+    # Mengacak peta
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if maze[row][col] == 0 or maze[row][col] == 1:
+                maze[row][col] = random.randint(0, 1)
+
+
+    # Memastikan satu jalur terhubung pada peta yang diacak
+    start_row, start_col = find_starting_point(maze)
+    connect_path(maze, start_row, start_col)
+    
+# Fungsi untuk mencari titik awal (jalur pertama) pada peta yang diacak
+def find_starting_point(maze):
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+
+    # Cari titik awal pada baris pertama
+    for col in range(num_cols):
+        if maze[0][col] == 0:
+            return 0, col
+
+    # Cari titik awal pada kolom terakhir
+    for row in range(num_rows):
+        if maze[row][num_cols - 1] == 0:
+            return row, num_cols - 1
+
+    # Cari titik awal pada baris terakhir
+    for col in range(num_cols - 1, -1, -1):
+        if maze[num_rows - 1][col] == 0:
+            return num_rows - 1, col
+
+    # Cari titik awal pada kolom pertama
+    for row in range(num_rows - 1, -1, -1):
+        if maze[row][0] == 0:
+            return row, 0
+
+    return -1, -1  # Jika tidak ditemukan titik awal, kembalikan koordinat -1, -1
+
+# Fungsi untuk menghubungkan satu jalur pada peta
+def connect_path(maze, row, col):
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+
+    # Fungsi untuk menggerakkan droid merah menggunakan algoritma DFS
+def move_red_droid(maze, red_droid_pos):
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+
+    # Definisikan arah gerakan droid merah
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+    # Menghubungkan jalur menggunakan algoritma Depth-First Search (DFS)
+    stack = [(row, col)]
+    visited = set()
+
+    while stack:
+        curr_row, curr_col = stack.pop()
+        visited.add((curr_row, curr_col))
+        maze[curr_row][curr_col] = 0
+
+        # Pengecekan tetangga atas
+        if curr_row > 0 and maze[curr_row - 1][curr_col] == 1 and (curr_row - 1, curr_col) not in visited:
+            stack.append((curr_row - 1, curr_col))
+            visited.add((curr_row - 1, curr_col))
+
+        # Pengecekan tetangga kanan
+        if curr_col < num_cols - 1 and maze[curr_row][curr_col + 1] == 1 and (curr_row, curr_col + 1) not in visited:
+            stack.append((curr_row, curr_col + 1))
+            visited.add((curr_row, curr_col + 1))
+
+        # Pengecekan tetangga bawah
+        if curr_row < num_rows - 1 and maze[curr_row + 1][curr_col] == 1 and (curr_row + 1, curr_col) not in visited:
+            stack.append((curr_row + 1, curr_col))
+            visited.add((curr_row + 1, curr_col))
+
+        # Pengecekan tetangga kiri
+        if curr_col > 0 and maze[curr_row][curr_col - 1] == 1 and (curr_row, curr_col - 1) not in visited:
+            stack.append((curr_row, curr_col - 1))
+            visited.add((curr_row, curr_col - 1))
+
+    # Menghubungkan jalur terakhir dengan posisi droid sebagai titik akhir
+    red_droid_pos = find_droid_position(maze, 2)  # Anggap 2 sebagai simbol posisi droid merah
+    green_droid_pos = find_droid_position(maze, 3)  # Anggap 3 sebagai simbol posisi droid hijau
+    maze[red_droid_pos[0]][red_droid_pos[1]] = 0
+    maze[green_droid_pos[0]][green_droid_pos[1]] = 0
+
+# Fungsi untuk mencari posisi droid pada peta
+def find_droid_position(maze, droid_symbol):
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if maze[row][col] == droid_symbol:
+                return row, col
+
+    return -1, -1  # Jika tidak ditemukan posisi droid, kembalikan koordinat -1, -1
+
+def find_neighbors(position, maze):
+    row, col = position
+    num_rows = len(maze)
+    num_cols = len(maze[0])
+    neighbors = []
+
+    # Pengecekan tetangga atas
+    if row > 0 and maze[row - 1][col] == 0:
+        neighbors.append((row - 1, col))
+
+    # Pengecekan tetangga bawah
+    if row < num_rows - 1 and maze[row + 1][col] == 0:
+        neighbors.append((row + 1, col))
+
+    # Pengecekan tetangga kiri
+    if col > 0 and maze[row][col - 1] == 0:
+        neighbors.append((row, col - 1))
+
+    # Pengecekan tetangga kanan
+    if col < num_cols - 1 and maze[row][col + 1] == 0:
+        neighbors.append((row, col + 1))
+
+    return neighbors
+
+# Fungsi untuk menghitung jarak (cost) antara dua posisi dalam algoritma A*
+def distance(position1, position2):
+    x1, y1 = position1
+    x2, y2 = position2
+    return abs(x2 - x1) + abs(y2 - y1)
+
+# Fungsi untuk mencari jalur dari posisi awal ke posisi tujuan menggunakan algoritma A*
+def a_star_search(start, goal, maze):
+    open_set = {start}  # Set posisi yang akan dieksplorasi
+    came_from = {} 
+    g_score = {start: 0}  # Cost terkecil dari start ke suatu posisi
+    f_score = {start: distance(start, goal)}  # g_score + heuristic (dalam kasus ini, jarak Manhattan)
+
+    while open_set:
+        current = min(open_set, key=lambda x: f_score.get(x, float('inf')))  # Pilih posisi dengan f_score terkecil
+
+        if current == goal:
+            # Jalur ditemukan
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.append(current)
+            path.reverse()
+            return path
+
+        open_set.remove(current)
+
+        for neighbor in find_neighbors(current, maze):
+            tentative_g_score = g_score[current] + 1  # Cost dari start ke neighbor adalah 1
+
+            if tentative_g_score < g_score.get(neighbor, float('inf')):
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                f_score[neighbor] = tentative_g_score + distance(neighbor, goal)
+                if neighbor not in open_set:
+                    open_set.add(neighbor)
+
+    # Tidak ada jalur yang ditemukan
+    return None
+
+
+mulai = 0
+add_droid_red()       
+add_droid_green()       
+
+for k in range(len(green_droids)-1,-1,-1):
+    green_droid_pos = green_droids[k]
+for h in range(len(red_droids)-1,-1,-1):
+   red_droid_pos = green_droids[h]
+
+
+# Looping sampai pengguna menutup jendela
+running = False
+while not running:
+    sliderr = slider.getValue()
+    clock = pygame.time.Clock()
+    clock.tick(20)
+    draw_maze(maze_map,red_droid_pos,green_droid_pos,button_pos, cell_size)
+    for i in range(len(red_droids)-1, -1, -1):
+
+            for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = True
+                
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        mouse_pos = pygame.mouse.get_pos()
+                        # print(mouse_pos)
+                        if button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1] <= mouse_pos[1] <= button_pos[1] + button_height:
+                            print(red_droids[0][0])
+                            # Memanggil fungsi untuk mengacak peta dengan tetap mempertahankan satu jalur terhubung
+                            randomize_maze(maze_map)
+                            connect_path(maze_map, red_droids[0][0], red_droids[0][1])  # Menghubungkan jalur dengan posisi droid merah sebagai titik awal
+                            connect_path(maze_map, green_droids[0][0], green_droids[0][1])  # Menghubungkan jalur dengan posisi droid hijau sebagai titik awal
+                            draw_maze(maze_map, red_droid_pos, green_droid_pos,button_pos,  cell_size, )
+                            
+                        # acak droid merah
+                        elif button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1]+40 <= mouse_pos[1] <= button_pos[1]+ 70 :
+                            ulang = True
+                            while ulang:
+                                for i in range(len(red_droids)-1, -1, -1):
+                                    
+                                    x = random.randint(0, 9) 
+                                    y = random.randint(0, 9) 
+                                    red = (0,0)
+                                    # cek jika ada tembok 
+                                    for row in range(num_rows):
+                                        for col in range(num_cols):
+                                            if maze_map[x][y] == 0  :
+                                                red= (x,y)
+                                                ulang = False
+                                    if red[0] == 0 : continue
+
+                                    else :  
+                                        red_droids[i] =  red
+                                 
+                        # acak droid hijau
+                        elif button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1]+80 <= mouse_pos[1] <= button_pos[1]+110 : # range y + 40 to y + 40
+                            ulang = True
+                            while ulang:
+                                for i in range(len(green_droids)-1, -1, -1):
+                                    
+                                    x = random.randint(0, 9) 
+                                    y = random.randint(0, 9) 
+                                    gren = (0,0)
+                                    # cek jika ada tembok 
+                                    for row in range(num_rows):
+                                        for col in range(num_cols):
+                                            if maze_map[x][y] == 0  :
+                                                gren= (x,y)
+                                                ulang = False
+                                    if gren[0] == 0 : continue
+
+                                    else :  
+                                        green_droids[i] =  gren
+                                    
+                                
+                        # tambah droid hijau
+                        elif button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1]+120 <= mouse_pos[1] <= button_pos[1]+150 : 
+                            print("tambah merah")
+                            add_droid_red()
+                        
+
+                        # mulai
+                        elif button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1]+160 <= mouse_pos[1] <= button_pos[1]+190 : # range y + 40 to y + 40
+                            print("Mulai")
+                            score = 0
+                            if start <=0:
+                                start = 300
+                            mulai +=1
+                            time =False
+
+
+                        # berhenti
+                        elif button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1]+200 <= mouse_pos[1] <= button_pos[1]+230 : # range y + 40 to y + 40
+                            # print("Berhenti")
+                            time = True
+                            mulai = 0
+                            
+
+                
+                        elif button_pos[0] <= mouse_pos[0] <= button_pos[0] + button_width and button_pos[1]+240 <= mouse_pos[1] <= button_pos[1]+270 : # range y + 40 to y + 40
+                            running = True
+                            # print("keluar")
+                    
+            mulai = mulai
+               
+            green_droid = green_droids[0]
+            clock.tick(4)
+            
+
+            red_droid = red_droids[i]
+            
+            red_droid_x, red_droid_y = red_droid
+            green_droid_x,green_droid_y = green_droid
+
+
+            if mulai != 0:  
+                path = a_star_search(red_droid, green_droid, maze_map)
+                if path:
+                    next_pos = path[1] if len(path) > 1 else red_droids[i]
+                    red_droids[i] = next_pos
+                
+            
+                
+                # ============================================== SETTING DROID GREEN MOVEMENT ========================================================
+               
+
+                if green_droid_y-red_droid_y < sliderr and green_droid_y-red_droid_y > 0  and green_droid_y < 9 and maze_map[green_droid_x][green_droid_y] == 0 and green_droid_x == red_droid_x: # ke kkanan
+                    green_droid_y +=1
+                    
+                    if maze_map[green_droid_x][green_droid_y] == 1: # kembalikan nilai y green droid ke awal jika ada tembok (mengaibaikan langkah ini)
+                        green_droid_y -=1
+                        green_droid_x +=1
+                        if maze_map[green_droid_x][green_droid_y] == 1 :
+                            green_droid_x -= 2
+                            
+                            if maze_map[green_droid_x][green_droid_y] == 1 :
+                                green_droid_x += 1
+                            
+                if red_droid_y - green_droid_y < sliderr and red_droid_y - green_droid_y > 0 and green_droid_y > 0 and maze_map[green_droid_x][green_droid_y] == 0 and green_droid_x == red_droid_x: # ke kiri
+                    green_droid_y -=1
+                    
+                    if maze_map[green_droid_x][green_droid_y] == 1 or green_droid_y < 0: # sama seperti diatas
+                        green_droid_y +=1
+                        green_droid_x -=1
+                        
+                        if maze_map[green_droid_x][green_droid_y] == 1 or green_droid_x < 0 : # sama seperti diatas
+                            green_droid_x +=2
+                            if maze_map[green_droid_x][green_droid_y] == 1 or green_droid_x > 9: # sama seperti diatas
+                                green_droid_x -=1
+                                
+
+
+                if green_droid_x -red_droid_x < sliderr and green_droid_x-red_droid_x > 0 and green_droid_x < 9 and maze_map[green_droid_x][green_droid_y] == 0 and green_droid_y == red_droid_y: # bawah
+                    green_droid_x +=1
+                    
+                    if maze_map[green_droid_x][green_droid_y] == 1  :
+                        green_droid_x -=1
+                        green_droid_y +=1
+                        if maze_map[green_droid_x][green_droid_y] == 1 :
+                            green_droid_y -=2
+                            if maze_map[green_droid_x][green_droid_y] == 1  : # sama
+                                green_droid_y +=1
+                
+                
+                if red_droid_x - green_droid_x < sliderr and red_droid_x - green_droid_x > 0 and green_droid_x < 9 and maze_map[green_droid_x][green_droid_y] == 0 and green_droid_y == red_droid_y: # atas
+                    green_droid_x -=1
+                  
+                    if maze_map[green_droid_x][green_droid_y] == 1 or green_droid_x < 0:
+                        green_droid_x +=1
+                        green_droid_y -=1
+
+                        if maze_map[green_droid_x][green_droid_y] == 1 or green_droid_y <0 :
+                            green_droid_y +=2
+                            if maze_map[green_droid_x][green_droid_y] == 1 or green_droid_y >9 :
+                                green_droid_y -=1
+
+             
+            if i == 0:
+                draw_droid(screen,(0,255,0), green_droid_x, green_droid_y)
+            draw_droid(screen,(255,0,0), red_droid_x, red_droid_y)
+            green_droids[0] = (green_droid_x, green_droid_y)
+            
+            if red_droid_x == green_droid_x and red_droid_y == green_droid_y:
+                # print("ok")
+
+                
+                green_droids.remove(green_droid)
+                red_droids.remove(red_droid)
+                add_droid_green()
+                add_droid_red()
+                running = True
+
+    
+    pygame_widgets.update(pygame.event.get()) # tampilkan slider  
+    output.setText(slider.getValue()) # ambil nilai slider
+    pygame.display.update() 
+    # Menghentikan pygame
+
+    
+pygame.quit()
